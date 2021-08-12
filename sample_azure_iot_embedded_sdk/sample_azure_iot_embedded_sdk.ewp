@@ -66,7 +66,7 @@
                 </option>
                 <option>
                     <name>OGLastSavedByProductVersion</name>
-                    <state>8.50.9.33458</state>
+                    <state>8.50.1.24770</state>
                 </option>
                 <option>
                     <name>GeneralEnableMisra</name>
@@ -222,8 +222,8 @@
                     <name>CCDefines</name>
                     <state>STM32L4S5xx</state>
                     <state>USE_HAL_DRIVER</state>
-                    <state>WIFI_SSID="&lt;YOUR-WIFI-SSID&gt;"</state>
-                    <state>WIFI_PASSWORD="&lt;YOUR-WIFI-PASSWORD&gt;"</state>
+                    <state>WIFI_SSID="Neo's WIFI"</state>
+                    <state>WIFI_PASSWORD="8220542Xy"</state>
                     <state>WIFI_SECURITY_TYPE=WIFI_ECN_WPA2_PSK</state>
                 </option>
                 <option>
@@ -365,6 +365,8 @@
                     <state>$PROJ_DIR$\..\stm32l4xx_lib\CMSIS\Include</state>
                     <state>$PROJ_DIR$\..\stm32l4xx_lib\CMSIS\Device\ST\STM32L4xx\Include</state>
                     <state>$PROJ_DIR$\..\common_hardware_code</state>
+                    <state>$PROJ_DIR$\..\common_hardware_code\lwesp\src\include\</state>
+                    <state>$PROJ_DIR$\..\common_hardware_code\lwesp\src\include\system\port\threadx</state>
                     <state>$PROJ_DIR$\..\netxduo\addons\azure_iot\azure-sdk-for-c\sdk\inc</state>
                     <state>$PROJ_DIR$\..\netxduo\addons\azure_iot\</state>
                 </option>
@@ -498,7 +500,7 @@
             <name>AARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>11</version>
+                <version>10</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -653,10 +655,6 @@
                 <option>
                     <name>AsmNoLiteralPool</name>
                     <state>0</state>
-                </option>
-                <option>
-                    <name>PreInclude</name>
-                    <state></state>
                 </option>
             </data>
         </settings>
@@ -1591,7 +1589,7 @@
             <name>AARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>11</version>
+                <version>10</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
                 <option>
@@ -1641,7 +1639,7 @@
                 </option>
                 <option>
                     <name>ADefines</name>
-                    <state>TX_ENABLE_EXECUTION_CHANGE_NOTIFY</state>
+                    <state></state>
                 </option>
                 <option>
                     <name>AList</name>
@@ -1717,7 +1715,7 @@
                 </option>
                 <option>
                     <name>AOutputFile</name>
-                    <state>$FILE_BNAME$.o</state>
+                    <state></state>
                 </option>
                 <option>
                     <name>ALimitErrorsCheck</name>
@@ -1746,10 +1744,6 @@
                 <option>
                     <name>AsmNoLiteralPool</name>
                     <state>0</state>
-                </option>
-                <option>
-                    <name>PreInclude</name>
-                    <state></state>
                 </option>
             </data>
         </settings>
@@ -2181,6 +2175,102 @@
     </configuration>
     <group>
         <name>Common Source</name>
+        <group>
+            <name>lwesp</name>
+            <group>
+                <name>src</name>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_ap.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_buff.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_cli.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_conn.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_debug.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_dhcp.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_dns.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_evt.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_hostname.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_input.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_int.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_mdns.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_mem.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_parser.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_pbuf.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_ping.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_smart.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_sntp.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_sta.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_threads.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_timeout.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_unicode.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_utils.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_wps.c</name>
+                </file>
+            </group>
+            <group>
+                <name>system</name>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_ll_stm32_threadx.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_ll_stm32l4s5_discovery.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_mem_threadx.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_sys_threadx_os.c</name>
+                </file>
+            </group>
+        </group>
         <file>
             <name>$PROJ_DIR$\..\common_hardware_code\board_setup.c</name>
         </file>

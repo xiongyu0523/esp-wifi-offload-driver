@@ -494,7 +494,7 @@
             <name>AARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>11</version>
+                <version>10</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -620,7 +620,7 @@
                 </option>
                 <option>
                     <name>AOutputFile</name>
-                    <state>$FILE_BNAME$.o</state>
+                    <state></state>
                 </option>
                 <option>
                     <name>ALimitErrorsCheck</name>
@@ -649,10 +649,6 @@
                 <option>
                     <name>AsmNoLiteralPool</name>
                     <state>0</state>
-                </option>
-                <option>
-                    <name>PreInclude</name>
-                    <state></state>
                 </option>
             </data>
         </settings>
@@ -1558,7 +1554,7 @@
             <name>AARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>11</version>
+                <version>10</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
                 <option>
@@ -1713,10 +1709,6 @@
                 <option>
                     <name>AsmNoLiteralPool</name>
                     <state>0</state>
-                </option>
-                <option>
-                    <name>PreInclude</name>
-                    <state></state>
                 </option>
             </data>
         </settings>
