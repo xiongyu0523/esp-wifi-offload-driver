@@ -66,6 +66,9 @@
 #define LWESP_USART_RDR_NAME              RDR
 #endif /* !defined(LWESP_USART_RDR_NAME) */
 
+#define LL_QUEUE_NUM_OF_ENTRY             10
+static UCHAR        ll_queue[LL_QUEUE_NUM_OF_ENTRY * sizeof(void *)];
+
 /* Byte tool */
 static UCHAR        byte_pool_mem[LWESP_MEM_SIZE];
 TX_BYTE_POOL        lwesp_byte_tool;
@@ -77,16 +80,17 @@ static size_t       old_pos;
 
 /* USART thread */
 static void usart_ll_thread(void* arg);
-static osThreadId_t usart_ll_thread_id;
+static TX_THREAD usart_ll_thread;
+static UCHAR usart_ll_thread_stack[LWESP_SYS_THREAD_SS];
 
 /* Message queue */
-static osMessageQueueId_t usart_ll_mbox_id;
+static TX_QUEUE usart_ll_mbox;
 
 /**
  * \brief           USART data processing
  */
 static void
-usart_ll_thread(void* arg) {
+usart_ll_thread(ULONG arg) {
     size_t pos;
 
     LWESP_UNUSED(arg);
@@ -94,7 +98,7 @@ usart_ll_thread(void* arg) {
     while (1) {
         void* d;
         /* Wait for the event message from DMA or USART */
-        osMessageQueueGet(usart_ll_mbox_id, &d, NULL, osWaitForever);
+        tx_queue_receive(&usart_ll_mbox, &d, TX_WAIT_FOREVER);
 
         /* Read data */
 #if defined(LWESP_USART_DMA_RX_STREAM)
@@ -273,7 +277,7 @@ configure_uart(uint32_t baudrate) {
 #endif /* defined(LWESP_USART_DMA_RX_STREAM) */
         LL_USART_Enable(LWESP_USART);
     } else {
-        osDelay(10);
+        tx_thread_sleep(10);
         LL_USART_Disable(LWESP_USART);
         usart_init.BaudRate = baudrate;
         LL_USART_Init(LWESP_USART, &usart_init);
@@ -281,14 +285,12 @@ configure_uart(uint32_t baudrate) {
     }
 
     /* Create mbox and start thread */
-    if (usart_ll_mbox_id == NULL) {
-        usart_ll_mbox_id = osMessageQueueNew(10, sizeof(void*), NULL);
+    if (tx_queue_info_get(&usart_ll_mbox, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) != TX_SUCCESS) {
+        (VOID)tx_queue_create(&usart_ll_mbox, "ll queue", sizeof(void *), ll_queue, sizeof(ll_queue));
     }
-    if (usart_ll_thread_id == NULL) {
-        const osThreadAttr_t attr = {
-            .stack_size = 1024
-        };
-        usart_ll_thread_id = osThreadNew(usart_ll_thread, usart_ll_mbox_id, &attr);
+
+    if (tx_thread_info_get(&usart_ll_thread, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) != TX_SUCCESS) {
+        (VOID)tx_thread_create(&usart_ll_thread, "ll thread", usart_ll_thread, 0, usart_ll_thread_stack, LWESP_SYS_THREAD_SS, 0, 0, TX_NO_TIME_SLICE, TX_AUTO_START)
     }
 }
 
@@ -349,16 +351,10 @@ lwesp_ll_init(lwesp_ll_t* ll) {
  */
 lwespr_t
 lwesp_ll_deinit(lwesp_ll_t* ll) {
-    if (usart_ll_mbox_id != NULL) {
-        osMessageQueueId_t tmp = usart_ll_mbox_id;
-        usart_ll_mbox_id = NULL;
-        osMessageQueueDelete(tmp);
-    }
-    if (usart_ll_thread_id != NULL) {
-        osThreadId_t tmp = usart_ll_thread_id;
-        usart_ll_thread_id = NULL;
-        osThreadTerminate(tmp);
-    }
+
+    (VOID)tx_queue_delete(&usart_ll_mbox);
+    (VOID)tx_thread_delete(&usart_ll_thread);
+
     initialized = 0;
     LWESP_UNUSED(ll);
     return lwespOK;
