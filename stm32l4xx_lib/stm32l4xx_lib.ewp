@@ -227,6 +227,7 @@
                     <state>STM32L4S5xx</state>
                     <state>USE_HAL_DRIVER</state>
                     <state>USE_STM32L4S5I_IOT01</state>
+                    <state>USE_FULL_LL_DRIVER</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -1050,7 +1051,7 @@
                 </option>
                 <option>
                     <name>IarchiveOutput</name>
-                    <state>C:\Users\wangwen\Desktop\project\git_project\project-X-Ware\b-l4s5i-iot01a\iar\stm32l4xx_lib\Debug\Exe\stm32l4xx_lib.a</state>
+                    <state>C:\Users\Neo\Desktop\iar\stm32l4xx_lib\Debug\Exe\stm32l4xx_lib.a</state>
                 </option>
             </data>
         </settings>

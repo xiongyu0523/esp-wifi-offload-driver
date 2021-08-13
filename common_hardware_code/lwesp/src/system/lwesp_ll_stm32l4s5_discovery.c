@@ -43,15 +43,17 @@
  *
  * USART_DMA:           DMA1
  * USART_DMA_CHANNEL:   DMA_CHANNEL_6
- * USART_DMA_REQ_NUM:   2
+ * USART_DMA_REQ_NUM:   26
  */
 
 #if !__DOXYGEN__
 
+#define USE_FULL_LL_DRIVER
 #include "stm32l4xx_ll_bus.h"
 #include "stm32l4xx_ll_usart.h"
 #include "stm32l4xx_ll_gpio.h"
 #include "stm32l4xx_ll_dma.h"
+#include "stm32l4xx_ll_dmamux.h"
 #include "stm32l4xx_ll_rcc.h"
 #include "stm32l4xx_ll_pwr.h"
 
@@ -61,11 +63,15 @@
 #define LWESP_USART_IRQ                       USART2_IRQn
 #define LWESP_USART_IRQHANDLER                USART2_IRQHandler
 
+/* DMAMUX settings */
+#define LWESP_USART_DMAMUX                    DMAMUX1
+#define LWESP_USART_DMAMUX_CLK                LL_APB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1)
+
 /* DMA settings */
 #define LWESP_USART_DMA                       DMA1
 #define LWESP_USART_DMA_CLK                   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1)
 #define LWESP_USART_DMA_RX_CH                 LL_DMA_CHANNEL_6
-#define LWESP_USART_DMA_RX_REQ_NUM            LL_DMA_REQUEST_2
+#define LWESP_USART_DMA_RX_REQ_NUM            LL_DMAMUX_REQ_USART2_RX
 #define LWESP_USART_DMA_RX_IRQ                DMA1_Channel6_IRQn
 #define LWESP_USART_DMA_RX_IRQHANDLER         DMA1_Channel6_IRQHandler
 

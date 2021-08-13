@@ -47,6 +47,7 @@
 #include "lwesp/lwesp_mem.h"
 #include "lwesp/lwesp_input.h"
 #include "system/lwesp_ll.h"
+#include "tx_api.h"
 
 #if !__DOXYGEN__
 
@@ -58,10 +59,6 @@
 #define LWESP_USART_DMA_RX_BUFF_SIZE      0x1000
 #endif /* !defined(LWESP_USART_DMA_RX_BUFF_SIZE) */
 
-#if !defined(LWESP_MEM_SIZE)
-#define LWESP_MEM_SIZE                    0x1000
-#endif /* !defined(LWESP_MEM_SIZE) */
-
 #if !defined(LWESP_USART_RDR_NAME)
 #define LWESP_USART_RDR_NAME              RDR
 #endif /* !defined(LWESP_USART_RDR_NAME) */
@@ -69,17 +66,13 @@
 #define LL_QUEUE_NUM_OF_ENTRY             10
 static UCHAR        ll_queue[LL_QUEUE_NUM_OF_ENTRY * sizeof(void *)];
 
-/* Byte tool */
-static UCHAR        byte_pool_mem[LWESP_MEM_SIZE];
-TX_BYTE_POOL        lwesp_byte_tool;
-
 /* USART memory */
 static uint8_t      usart_mem[LWESP_USART_DMA_RX_BUFF_SIZE];
 static uint8_t      is_running, initialized;
 static size_t       old_pos;
 
 /* USART thread */
-static void usart_ll_thread(void* arg);
+static void usart_ll_thread_entry(ULONG arg);
 static TX_THREAD usart_ll_thread;
 static UCHAR usart_ll_thread_stack[LWESP_SYS_THREAD_SS];
 
@@ -90,7 +83,7 @@ static TX_QUEUE usart_ll_mbox;
  * \brief           USART data processing
  */
 static void
-usart_ll_thread(ULONG arg) {
+usart_ll_thread_entry(ULONG arg) {
     size_t pos;
 
     LWESP_UNUSED(arg);
@@ -135,6 +128,9 @@ configure_uart(uint32_t baudrate) {
     if (!initialized) {
         /* Enable peripheral clocks */
         LWESP_USART_CLK;
+#if defined(LWESP_USART_DMAMUX)
+        LWESP_USART_DMAMUX_CLK;
+#endif
         LWESP_USART_DMA_CLK;
         LWESP_USART_TX_PORT_CLK;
         LWESP_USART_RX_PORT_CLK;
@@ -285,12 +281,12 @@ configure_uart(uint32_t baudrate) {
     }
 
     /* Create mbox and start thread */
-    if (tx_queue_info_get(&usart_ll_mbox, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) != TX_SUCCESS) {
+    if (usart_ll_mbox.tx_queue_id == TX_CLEAR_ID) {
         (VOID)tx_queue_create(&usart_ll_mbox, "ll queue", sizeof(void *), ll_queue, sizeof(ll_queue));
     }
 
-    if (tx_thread_info_get(&usart_ll_thread, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) != TX_SUCCESS) {
-        (VOID)tx_thread_create(&usart_ll_thread, "ll thread", usart_ll_thread, 0, usart_ll_thread_stack, LWESP_SYS_THREAD_SS, 0, 0, TX_NO_TIME_SLICE, TX_AUTO_START)
+    if (usart_ll_thread.tx_thread_id == TX_CLEAR_ID) {
+        (VOID)tx_thread_create(&usart_ll_thread, "ll thread", usart_ll_thread_entry, 0, usart_ll_thread_stack, LWESP_SYS_THREAD_SS, 0, 0, TX_NO_TIME_SLICE, TX_AUTO_START);
     }
 }
 
@@ -332,8 +328,6 @@ send_data(const void* data, size_t len) {
 lwespr_t
 lwesp_ll_init(lwesp_ll_t* ll) {
 
-    tx_byte_pool_create(&lwesp_byte_tool, "byte pool", byte_pool_mem, LWESP_MEM_SIZE);
-
     if (!initialized) {
         ll->send_fn = send_data;                /* Set callback function to send data */
 #if defined(LWESP_RESET_PIN)
@@ -371,9 +365,9 @@ LWESP_USART_IRQHANDLER(void) {
     LL_USART_ClearFlag_ORE(LWESP_USART);
     LL_USART_ClearFlag_NE(LWESP_USART);
 
-    if (usart_ll_mbox_id != NULL) {
+    if (usart_ll_mbox.tx_queue_id != TX_CLEAR_ID) {
         void* d = (void*)1;
-        osMessageQueuePut(usart_ll_mbox_id, &d, 0, 0);
+        tx_queue_send(&usart_ll_mbox, &d, TX_NO_WAIT);
     }
 }
 
@@ -385,9 +379,9 @@ LWESP_USART_DMA_RX_IRQHANDLER(void) {
     LWESP_USART_DMA_RX_CLEAR_TC;
     LWESP_USART_DMA_RX_CLEAR_HT;
 
-    if (usart_ll_mbox_id != NULL) {
+    if (usart_ll_mbox.tx_queue_id != TX_CLEAR_ID) {
         void* d = (void*)1;
-        osMessageQueuePut(usart_ll_mbox_id, &d, 0, 0);
+        tx_queue_send(&usart_ll_mbox, &d, TX_NO_WAIT);
     }
 }
 

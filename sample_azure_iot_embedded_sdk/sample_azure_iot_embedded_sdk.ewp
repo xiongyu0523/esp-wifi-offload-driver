@@ -2222,6 +2222,9 @@
                     <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_mem.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\api\lwesp_netconn.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_parser.c</name>
                 </file>
                 <file>
@@ -2257,9 +2260,6 @@
             </group>
             <group>
                 <name>system</name>
-                <file>
-                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_ll_stm32_threadx.c</name>
-                </file>
                 <file>
                     <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_ll_stm32l4s5_discovery.c</name>
                 </file>
@@ -2306,6 +2306,15 @@
         <name>Sample</name>
         <file>
             <name>$PROJ_DIR$\main.c</name>
+            <excluded>
+                <configuration>Debug</configuration>
+            </excluded>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\main_test_lwesp.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\netconn_client.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\nx_azure_iot_cert.c</name>

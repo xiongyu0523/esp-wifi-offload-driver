@@ -36,15 +36,25 @@
 
 #if !__DOXYGEN__
 
-#ifdef TX_DISABLE_ERROR_CHECKING
-#error "ThreadX Error checking must be enabled to validate object"
+#if !defined(LWESP_MEM_SIZE)
+#define LWESP_MEM_SIZE                    0x1000
 #endif
 
-static TX_MUTEX _sys_mutex;
+static UCHAR        byte_pool_mem[LWESP_MEM_SIZE];
+TX_BYTE_POOL        lwesp_byte_tool;
+static TX_MUTEX     _sys_mutex;
 
 uint8_t
 lwesp_sys_init(void) {
-    return tx_mutex_create(&_sys_mutex, "sys mutex", TX_INHERIT) == TX_SUCCESS ? 1 : 0;
+
+    UINT status;
+    
+    status = tx_byte_pool_create(&lwesp_byte_tool, "byte pool", byte_pool_mem, LWESP_MEM_SIZE);
+    if (status == TX_SUCCESS) {
+        status = tx_mutex_create(&_sys_mutex, "sys mutex", TX_INHERIT);
+    }
+
+    return status == TX_SUCCESS ? 1 : 0;
 }
 
 uint32_t
@@ -84,7 +94,7 @@ lwesp_sys_mutex_unlock(lwesp_sys_mutex_t* p) {
 
 uint8_t
 lwesp_sys_mutex_isvalid(lwesp_sys_mutex_t* p) {
-    return tx_mutex_info_get(p, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) == TX_SUCCESS ? 1 : 0;
+    return p->tx_mutex_id != TX_CLEAR_ID ? 1 : 0;
 }
 
 uint8_t
@@ -116,7 +126,7 @@ lwesp_sys_sem_release(lwesp_sys_sem_t* p) {
 
 uint8_t
 lwesp_sys_sem_isvalid(lwesp_sys_sem_t* p) {
-    return tx_semaphore_info_get(p, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) == TX_SUCCESS ? 1 : 0;
+    return p->tx_semaphore_id != TX_CLEAR_ID ? 1 : 0;
 }
 
 uint8_t
@@ -163,7 +173,7 @@ uint32_t
 lwesp_sys_mbox_get(lwesp_sys_mbox_t* b, void** m, uint32_t timeout) {
 
     ULONG start = tx_time_get();
-    return tx_queue_receive(b, *m, !timeout ? TX_WAIT_FOREVER : timeout) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
+    return tx_queue_receive(b, m, !timeout ? TX_WAIT_FOREVER : timeout) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
 }
 
 uint8_t
@@ -173,12 +183,12 @@ lwesp_sys_mbox_putnow(lwesp_sys_mbox_t* b, void* m) {
 
 uint8_t
 lwesp_sys_mbox_getnow(lwesp_sys_mbox_t* b, void** m) {
-    return tx_queue_receive(b, *m, TX_NO_WAIT) == TX_SUCCESS ? 1 : 0;
+    return tx_queue_receive(b, m, TX_NO_WAIT) == TX_SUCCESS ? 1 : 0;
 }
 
 uint8_t
 lwesp_sys_mbox_isvalid(lwesp_sys_mbox_t* b) {
-    return tx_queue_info_get(b, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL, TX_NULL) == TX_SUCCESS ? 1 : 0;
+    return b->tx_queue_id != TX_CLEAR_ID ? 1 : 0;
 }
 
 uint8_t
