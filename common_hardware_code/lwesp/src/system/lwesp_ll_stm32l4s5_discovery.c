@@ -57,11 +57,11 @@
 #include "stm32l4xx_ll_rcc.h"
 #include "stm32l4xx_ll_pwr.h"
 
-/* USART */
-#define LWESP_USART                           USART2
-#define LWESP_USART_CLK                       LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2)
-#define LWESP_USART_IRQ                       USART2_IRQn
-#define LWESP_USART_IRQHANDLER                USART2_IRQHandler
+/* UART */
+#define LWESP_USART                           UART4
+#define LWESP_USART_CLK                       LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_UART4)
+#define LWESP_USART_IRQ                       UART4_IRQn
+#define LWESP_USART_IRQHANDLER                UART4_IRQHandler
 
 /* DMAMUX settings */
 #define LWESP_USART_DMAMUX                    DMAMUX1
@@ -71,7 +71,7 @@
 #define LWESP_USART_DMA                       DMA1
 #define LWESP_USART_DMA_CLK                   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1)
 #define LWESP_USART_DMA_RX_CH                 LL_DMA_CHANNEL_6
-#define LWESP_USART_DMA_RX_REQ_NUM            LL_DMAMUX_REQ_USART2_RX
+#define LWESP_USART_DMA_RX_REQ_NUM            LL_DMAMUX_REQ_UART4_RX
 #define LWESP_USART_DMA_RX_IRQ                DMA1_Channel6_IRQn
 #define LWESP_USART_DMA_RX_IRQHANDLER         DMA1_Channel6_IRQHandler
 
@@ -82,21 +82,21 @@
 #define LWESP_USART_DMA_RX_CLEAR_HT           LL_DMA_ClearFlag_HT5(LWESP_USART_DMA)
 
 /* USART TX PIN */
-#define LWESP_USART_TX_PORT_CLK               LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOD)
-#define LWESP_USART_TX_PORT                   GPIOD
-#define LWESP_USART_TX_PIN                    LL_GPIO_PIN_5
-#define LWESP_USART_TX_PIN_AF                 LL_GPIO_AF_7
+#define LWESP_USART_TX_PORT_CLK               LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA)
+#define LWESP_USART_TX_PORT                   GPIOA
+#define LWESP_USART_TX_PIN                    LL_GPIO_PIN_0
+#define LWESP_USART_TX_PIN_AF                 LL_GPIO_AF_8
 
 /* USART RX PIN */
-#define LWESP_USART_RX_PORT_CLK               LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOD)
-#define LWESP_USART_RX_PORT                   GPIOD
-#define LWESP_USART_RX_PIN                    LL_GPIO_PIN_6
-#define LWESP_USART_RX_PIN_AF                 LL_GPIO_AF_7
+#define LWESP_USART_RX_PORT_CLK               LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA)
+#define LWESP_USART_RX_PORT                   GPIOA
+#define LWESP_USART_RX_PIN                    LL_GPIO_PIN_1
+#define LWESP_USART_RX_PIN_AF                 LL_GPIO_AF_8
 
 /* RESET PIN */
 #define LWESP_RESET_PORT_CLK                  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOD)
 #define LWESP_RESET_PORT                      GPIOD
-#define LWESP_RESET_PIN                       LL_GPIO_PIN_0
+#define LWESP_RESET_PIN                       LL_GPIO_PIN_14
 
 /* Include STM32 generic driver */
 #include "../system/lwesp_ll_stm32_threadx.c"
