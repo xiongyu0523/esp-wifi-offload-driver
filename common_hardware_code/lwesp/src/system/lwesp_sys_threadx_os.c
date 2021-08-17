@@ -116,7 +116,7 @@ lwesp_sys_sem_delete(lwesp_sys_sem_t* p) {
 uint32_t
 lwesp_sys_sem_wait(lwesp_sys_sem_t* p, uint32_t timeout) {
     ULONG start = tx_time_get();
-    return tx_semaphore_get(p, !timeout ? TX_WAIT_FOREVER : timeout) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
+    return tx_semaphore_get(p, !timeout ? TX_WAIT_FOREVER : timeout / 10) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
 }
 
 uint8_t
@@ -143,7 +143,7 @@ lwesp_sys_mbox_create(lwesp_sys_mbox_t* b, size_t size) {
 
     void *queue_mem = lwesp_mem_malloc(queue_total_size);
     if (queue_mem != NULL) {
-        if (tx_queue_create(b, TX_NULL, sizeof(void *), queue_mem, queue_total_size) == TX_SUCCESS) {
+        if (tx_queue_create(b, TX_NULL, sizeof(void *) / sizeof(ULONG), queue_mem, queue_total_size) == TX_SUCCESS) {
             rt = 1;
         } else {
             lwesp_mem_free(queue_mem);
@@ -173,7 +173,7 @@ uint32_t
 lwesp_sys_mbox_get(lwesp_sys_mbox_t* b, void** m, uint32_t timeout) {
 
     ULONG start = tx_time_get();
-    return tx_queue_receive(b, m, !timeout ? TX_WAIT_FOREVER : timeout) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
+    return tx_queue_receive(b, m, !timeout ? TX_WAIT_FOREVER : timeout / 10) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
 }
 
 uint8_t
