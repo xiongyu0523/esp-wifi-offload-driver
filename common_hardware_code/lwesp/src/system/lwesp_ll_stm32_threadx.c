@@ -282,7 +282,7 @@ configure_uart(uint32_t baudrate) {
 
     /* Create mbox and start thread */
     if (usart_ll_mbox.tx_queue_id == TX_CLEAR_ID) {
-        (VOID)tx_queue_create(&usart_ll_mbox, "ll queue", sizeof(void *), ll_queue, sizeof(ll_queue));
+        (VOID)tx_queue_create(&usart_ll_mbox, "ll queue", sizeof(void *) / sizeof(ULONG), ll_queue, sizeof(ll_queue));
     }
 
     if (usart_ll_thread.tx_thread_id == TX_CLEAR_ID) {
@@ -378,6 +378,7 @@ void
 LWESP_USART_DMA_RX_IRQHANDLER(void) {
     LWESP_USART_DMA_RX_CLEAR_TC;
     LWESP_USART_DMA_RX_CLEAR_HT;
+    LWESP_USART_DMA_RX_CLEAR_TE;
 
     if (usart_ll_mbox.tx_queue_id != TX_CLEAR_ID) {
         void* d = (void*)1;

@@ -181,7 +181,6 @@ utils_print_ip(const char* str_b, const lwesp_ip_t* ip, const char* str_a) {
 
 ap_entry_t
 ap_list[] = {
-    { "Neo's WIIF", "8220542Xy" },
     { "TilenM_ST", "its private" },
     { "Majerle WIFI", "majerle_internet_private" },
     { "Majerle AMIS", "majerle_internet_private" },

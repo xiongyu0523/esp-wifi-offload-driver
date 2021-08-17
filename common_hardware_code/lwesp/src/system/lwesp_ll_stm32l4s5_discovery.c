@@ -36,14 +36,14 @@
 /*
  * Default UART configuration is:
  *
- * UART:                USART2
- * STM32 TX (ESP RX):   GPIOD, GPIO_PIN_5
- * STM32 RX (ESP TX):   GPIOD, GPIO_PIN_6
- * RESET:               GPIOA, GPIO_PIN_0
+ * UART:                UART4
+ * STM32 TX (ESP RX):   GPIOA, GPIO_PIN_0
+ * STM32 RX (ESP TX):   GPIOA, GPIO_PIN_1
+ * RESET:               GPIOD, GPIO_PIN_14
  *
  * USART_DMA:           DMA1
  * USART_DMA_CHANNEL:   DMA_CHANNEL_6
- * USART_DMA_REQ_NUM:   26
+ * USART_DMA_REQ_NUM:   LL_DMAMUX_REQ_UART4_RX
  */
 
 #if !__DOXYGEN__
@@ -65,7 +65,7 @@
 
 /* DMAMUX settings */
 #define LWESP_USART_DMAMUX                    DMAMUX1
-#define LWESP_USART_DMAMUX_CLK                LL_APB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1)
+#define LWESP_USART_DMAMUX_CLK                LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1)
 
 /* DMA settings */
 #define LWESP_USART_DMA                       DMA1
@@ -76,10 +76,11 @@
 #define LWESP_USART_DMA_RX_IRQHANDLER         DMA1_Channel6_IRQHandler
 
 /* DMA flags management */
-#define LWESP_USART_DMA_RX_IS_TC              LL_DMA_IsActiveFlag_TC5(LWESP_USART_DMA)
-#define LWESP_USART_DMA_RX_IS_HT              LL_DMA_IsActiveFlag_HT5(LWESP_USART_DMA)
-#define LWESP_USART_DMA_RX_CLEAR_TC           LL_DMA_ClearFlag_TC5(LWESP_USART_DMA)
-#define LWESP_USART_DMA_RX_CLEAR_HT           LL_DMA_ClearFlag_HT5(LWESP_USART_DMA)
+#define LWESP_USART_DMA_RX_IS_TC              LL_DMA_IsActiveFlag_TC6(LWESP_USART_DMA)
+#define LWESP_USART_DMA_RX_IS_HT              LL_DMA_IsActiveFlag_HT6(LWESP_USART_DMA)
+#define LWESP_USART_DMA_RX_CLEAR_TC           LL_DMA_ClearFlag_TC6(LWESP_USART_DMA)
+#define LWESP_USART_DMA_RX_CLEAR_HT           LL_DMA_ClearFlag_HT6(LWESP_USART_DMA)
+#define LWESP_USART_DMA_RX_CLEAR_TE           LL_DMA_ClearFlag_TE6(LWESP_USART_DMA)
 
 /* USART TX PIN */
 #define LWESP_USART_TX_PORT_CLK               LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA)

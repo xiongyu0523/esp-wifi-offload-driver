@@ -40,6 +40,9 @@
 #define LWESP_MEM_SIZE                    0x1000
 #endif
 
+#define LWESP_TICK_PERIOD                 (1000 / TX_TIMER_TICKS_PER_SECOND)
+#define LWESP_MS_TO_TICKS(ms)             ((ms) * TX_TIMER_TICKS_PER_SECOND / 1000 )
+
 static UCHAR        byte_pool_mem[LWESP_MEM_SIZE];
 TX_BYTE_POOL        lwesp_byte_tool;
 static TX_MUTEX     _sys_mutex;
@@ -59,7 +62,7 @@ lwesp_sys_init(void) {
 
 uint32_t
 lwesp_sys_now(void) {
-    return tx_time_get() * 10;
+    return tx_time_get() * LWESP_TICK_PERIOD;
 }
 
 uint8_t
@@ -116,7 +119,7 @@ lwesp_sys_sem_delete(lwesp_sys_sem_t* p) {
 uint32_t
 lwesp_sys_sem_wait(lwesp_sys_sem_t* p, uint32_t timeout) {
     ULONG start = tx_time_get();
-    return tx_semaphore_get(p, !timeout ? TX_WAIT_FOREVER : timeout / 10) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
+    return tx_semaphore_get(p, !timeout ? TX_WAIT_FOREVER : LWESP_MS_TO_TICKS(timeout)) == TX_SUCCESS ? (tx_time_get() - start) * LWESP_TICK_PERIOD : LWESP_SYS_TIMEOUT;
 }
 
 uint8_t
@@ -173,7 +176,7 @@ uint32_t
 lwesp_sys_mbox_get(lwesp_sys_mbox_t* b, void** m, uint32_t timeout) {
 
     ULONG start = tx_time_get();
-    return tx_queue_receive(b, m, !timeout ? TX_WAIT_FOREVER : timeout / 10) == TX_SUCCESS ? tx_time_get() - start : LWESP_SYS_TIMEOUT;
+    return tx_queue_receive(b, m, !timeout ? TX_WAIT_FOREVER : LWESP_MS_TO_TICKS(timeout)) == TX_SUCCESS ? (tx_time_get() - start) * LWESP_TICK_PERIOD : LWESP_SYS_TIMEOUT;
 }
 
 uint8_t
