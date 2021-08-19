@@ -41,9 +41,11 @@
  * copy & replace here settings you want to change values
  */
 
-#define LWESP_CFG_ESP8266           1
+#define LWESP_CFG_ESP32_C3          1
 #define LWESP_CFG_INPUT_USE_PROCESS 1
 #define LWESP_CFG_MEM_CUSTOM        1
+#define LWESP_MEM_SIZE              8192
 #define LWESP_CFG_NETCONN           1
+#define LWESP_CFG_DNS               1
 
 #endif /* LWESP_HDR_OPTS_H */

@@ -20,6 +20,18 @@
 /* Include the sample.  */
 extern VOID sample_entry(NX_IP* ip_ptr, NX_PACKET_POOL* pool_ptr, NX_DNS* dns_ptr, UINT (*unix_time_callback)(ULONG *unix_time));
 
+/* Define the default wifi ssid and password. The user can override this 
+   via -D command line option or via project settings.  */
+
+#ifndef WIFI_SSID
+#error "Symbol WIFI_SSID must be defined."
+#endif /* WIFI_SSID  */
+
+#ifndef WIFI_PASSWORD
+#error "Symbol WIFI_PASSWORD must be defined."
+#endif /* WIFI_PASSWORD  */
+
+
 /* Define the helper thread for running Azure SDK on ThreadX (THREADX IoT Platform).  */
 #ifndef SAMPLE_HELPER_STACK_SIZE
 #define SAMPLE_HELPER_STACK_SIZE        (4096)
@@ -156,7 +168,7 @@ void SAMPLE_BOARD_SETUP();
 #endif /* SAMPLE_BOARD_SETUP */
 
 #ifdef SAMPLE_NETWORK_CONFIGURE
-void SAMPLE_NETWORK_CONFIGURE(NX_IP *ip_ptr, ULONG *dns_address);
+void SAMPLE_NETWORK_CONFIGURE(const CHAR *ssid_ptr, const CHAR *pwd_ptr, NX_IP *ip_ptr, ULONG *dns_address);
 #endif
 
 /* Define main entry point.  */
@@ -286,7 +298,7 @@ UINT    dns_server_address_size = sizeof(dns_server_address);
 #ifndef SAMPLE_DHCP_DISABLE
     dhcp_wait();
 #elif defined(SAMPLE_NETWORK_CONFIGURE)
-    SAMPLE_NETWORK_CONFIGURE(&ip_0, &dns_server_address[0]);
+    SAMPLE_NETWORK_CONFIGURE(WIFI_SSID, WIFI_PASSWORD, &ip_0, &dns_server_address[0]);
 #else
     nx_ip_gateway_address_set(&ip_0, SAMPLE_GATEWAY_ADDRESS);
 #endif /* SAMPLE_DHCP_DISABLE  */

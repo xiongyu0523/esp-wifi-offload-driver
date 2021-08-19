@@ -1,29 +1,47 @@
-/**
-  ******************************************************************************
-  * @file    wifi.c
-  * @author  MCD Application Team
-  * @brief   WIFI interface file.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics International N.V.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
 /* Includes ------------------------------------------------------------------*/
+#include "lwesp/lwesp.h"
+#include "lwesp/lwesp_sta.h"
+#include "lwesp/lwesp_dns.h"
+#include "lwesp/lwesp_netconn.h"
 #include "wifi.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-ES_WIFIObject_t    EsWifiObj;
 
 /* Private functions ---------------------------------------------------------*/
+
+static lwespr_t lwesp_callback_func(lwesp_evt_t* evt) {
+    switch (lwesp_evt_get_type(evt)) {
+        case LWESP_EVT_AT_VERSION_NOT_SUPPORTED: {
+            lwesp_sw_version_t v_min, v_curr;
+
+            lwesp_get_min_at_fw_version(&v_min);
+            lwesp_get_current_at_fw_version(&v_curr);
+
+            printf("Current ESP AT version is not supported by library!\r\n");
+            printf("Minimum required AT version is: %d.%d.%d\r\n", (int)v_min.major, (int)v_min.minor, (int)v_min.patch);
+            printf("Current AT version is: %d.%d.%d\r\n", (int)v_curr.major, (int)v_curr.minor, (int)v_curr.patch);
+            break;
+        }
+        case LWESP_EVT_INIT_FINISH: {
+            printf("Library initialized!\r\n");
+            break;
+        }
+        case LWESP_EVT_RESET_DETECTED: {
+            printf("Device reset detected!\r\n");
+            break;
+        }
+        case LWESP_EVT_WIFI_IP_ACQUIRED: {
+            printf("IP acquired\r\n");
+            break;
+        }
+        default: break;
+    }
+    return lwespOK;
+}
+
+/* Public functions ---------------------------------------------------------*/
+
 /**
   * @brief  Initialize the WIFI core
   * @param  None
@@ -31,21 +49,16 @@ ES_WIFIObject_t    EsWifiObj;
   */
 WIFI_Status_t WIFI_Init(void)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(ES_WIFI_RegisterBusIO(&EsWifiObj,
-                           SPI_WIFI_Init,
-                           SPI_WIFI_DeInit,
-                           SPI_WIFI_Delay,
-                           SPI_WIFI_SendData,
-                           SPI_WIFI_ReceiveData) == ES_WIFI_STATUS_OK)
-  {
-    if(ES_WIFI_Init(&EsWifiObj) == ES_WIFI_STATUS_OK)
-    {
-      ret = WIFI_STATUS_OK;
+    lwespr_t api_ret;
+    WIFI_Status_t ret;
+
+    api_ret = lwesp_init(lwesp_callback_func, 1);
+    if (api_ret == lwespOK) {
+        ret = WIFI_STATUS_OK;
+    } else {
+        ret = WIFI_STATUS_ERROR;
     }
-  }
-  return ret;
+    return ret;
 }
 
 /**
@@ -56,27 +69,7 @@ WIFI_Status_t WIFI_Init(void)
   */
 WIFI_Status_t WIFI_ListAccessPoints(WIFI_APs_t *APs, uint8_t AP_MaxNbr)
 {
-  uint8_t APCount;
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  ES_WIFI_APs_t esWifiAPs;
-  
-  if(ES_WIFI_ListAccessPoints(&EsWifiObj, &esWifiAPs) == ES_WIFI_STATUS_OK)
-  {
-    if(esWifiAPs.nbr > 0)
-    {
-      APs->count = MIN(esWifiAPs.nbr, AP_MaxNbr);
-      for(APCount = 0; APCount < APs->count; APCount++)
-      {
-        APs->ap[APCount].Ecn = (WIFI_Ecn_t)esWifiAPs.AP[APCount].Security;
-        strncpy( (char *)APs->ap[APCount].SSID, (char *)esWifiAPs.AP[APCount].SSID, MIN (WIFI_MAX_SSID_NAME, WIFI_MAX_SSID_NAME));
-        APs->ap[APCount].RSSI = esWifiAPs.AP[APCount].RSSI;
-        memcpy(APs->ap[APCount].MAC, esWifiAPs.AP[APCount].MAC, 6);
-        APs->ap[APCount].Channel = esWifiAPs.AP[APCount].Channel;
-      }
-    }
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -84,10 +77,6 @@ WIFI_Status_t WIFI_ListAccessPoints(WIFI_APs_t *APs, uint8_t AP_MaxNbr)
   * @param  SSID : SSID string
   * @param  Password : Password string
   * @param  ecn : Encryption type
-  * @param  IP_Addr : Got IP Address
-  * @param  IP_Mask : Network IP mask
-  * @param  Gateway_Addr : Gateway IP address
-  * @param  MAC : pointer to MAC Address
   * @retval Operation status
   */
 WIFI_Status_t WIFI_Connect(
@@ -95,16 +84,16 @@ WIFI_Status_t WIFI_Connect(
                              const char* Password,
                              WIFI_Ecn_t ecn)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+    (void)ecn;
 
-  if(ES_WIFI_Connect(&EsWifiObj, SSID, Password, (ES_WIFI_SecurityType_t) ecn) == ES_WIFI_STATUS_OK)
-  {
-    if(ES_WIFI_GetNetworkSettings(&EsWifiObj) == ES_WIFI_STATUS_OK)
-    {
-       ret = WIFI_STATUS_OK;
+    api_ret = lwesp_sta_join(SSID, Password, NULL, NULL, NULL, 1); 
+    if (api_ret == lwespOK) {
+        ret = WIFI_STATUS_OK;
     }
-  }
-  return ret;
+
+    return ret;
 }
 
 /**
@@ -113,29 +102,40 @@ WIFI_Status_t WIFI_Connect(
   */
 WIFI_Status_t WIFI_GetMAC_Address(uint8_t  *mac)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(ES_WIFI_GetMACAddress(&EsWifiObj, mac) == ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
-}
+    lwesp_mac_t mac_addr;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
 
+    api_ret = lwesp_sta_getmac(&mac_addr, NULL, NULL, 1);
+    if (api_ret == lwespOK) {
+        (void)memcpy(mac, &mac_addr.mac[0], 6);
+        ret = WIFI_STATUS_OK;
+    }
+
+    return ret;
+}
+    
 /**
   * @brief  This function retrieves the WiFi interface's IP address.
   * @retval Operation Status.
   */
 WIFI_Status_t WIFI_GetIP_Address (uint8_t  *ipaddr)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if (ES_WIFI_IsConnected(&EsWifiObj) == 1)
-  {
-    memcpy(ipaddr, EsWifiObj.NetSettings.IP_Addr, 4);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwesp_ip_t ip_addr;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    if (lwesp_sta_is_joined()) {
+        api_ret = lwesp_sta_getip(&ip_addr, NULL, NULL, NULL, NULL, 1);
+        if (api_ret == lwespOK) {
+            if (ipaddr != NULL) {
+                memcpy(ipaddr, &ip_addr.addr.ip4.addr[0], 4);
+                ret = WIFI_STATUS_OK;
+            }
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -144,14 +144,21 @@ WIFI_Status_t WIFI_GetIP_Address (uint8_t  *ipaddr)
   */
 WIFI_Status_t WIFI_GetIP_Mask (uint8_t  *mask)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if (ES_WIFI_IsConnected(&EsWifiObj) == 1)
-  {
-    memcpy(mask, EsWifiObj.NetSettings.IP_Mask, 4);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwesp_ip_t nm_addr;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    if (lwesp_sta_is_joined()) {
+        api_ret = lwesp_sta_getip(NULL, NULL, &nm_addr, NULL, NULL, 1);
+        if (api_ret == lwespOK) {
+            if (mask != NULL) {
+                memcpy(mask, &nm_addr.addr.ip4.addr[0], 4);
+                ret = WIFI_STATUS_OK;
+            }
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -160,14 +167,21 @@ WIFI_Status_t WIFI_GetIP_Mask (uint8_t  *mask)
   */
 WIFI_Status_t WIFI_GetGateway_Address (uint8_t  *Gateway_addr)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR; 
-  
-  if(EsWifiObj.NetSettings.IsConnected)
-  {
-    memcpy(Gateway_addr, EsWifiObj.NetSettings.Gateway_Addr, 4);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwesp_ip_t gw_addr;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    if (lwesp_sta_is_joined()) {
+        api_ret = lwesp_sta_getip(NULL, &gw_addr, NULL, NULL, NULL, 1);
+        if (api_ret == lwespOK) {
+            if (Gateway_addr != NULL) {
+                memcpy(Gateway_addr, &gw_addr.addr.ip4.addr[0], 4);
+                ret = WIFI_STATUS_OK;
+            }
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -176,15 +190,22 @@ WIFI_Status_t WIFI_GetGateway_Address (uint8_t  *Gateway_addr)
   */
 WIFI_Status_t WIFI_GetDNS_Address (uint8_t  *DNS1addr,uint8_t  *DNS2addr)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR; 
-  
-  if(EsWifiObj.NetSettings.IsConnected)
-  {
-    memcpy(DNS1addr, EsWifiObj.NetSettings.DNS1, 4);
-    memcpy(DNS2addr, EsWifiObj.NetSettings.DNS2, 4);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwesp_ip_t dns1_addr, dns2_addr;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    if (lwesp_sta_is_joined()) {
+        api_ret = lwesp_dns_get_config(&dns1_addr, &dns2_addr, NULL, NULL, 1);
+        if (api_ret == lwespOK) {
+            if ((DNS1addr != NULL) && (DNS2addr != NULL)) {
+                memcpy(DNS1addr, &dns1_addr.addr.ip4.addr[0], 4);
+                memcpy(DNS2addr, &dns2_addr.addr.ip4.addr[0], 4);
+                ret = WIFI_STATUS_OK;
+            }
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -194,13 +215,15 @@ WIFI_Status_t WIFI_GetDNS_Address (uint8_t  *DNS1addr,uint8_t  *DNS2addr)
   */
 WIFI_Status_t WIFI_Disconnect(void)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  if( ES_WIFI_Disconnect(&EsWifiObj)== ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  
-  return ret;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    api_ret = lwesp_sta_quit(NULL, NULL, 1); 
+    if (api_ret == lwespOK) {
+        ret = WIFI_STATUS_OK;
+    }
+
+    return ret;
 }
 
 /**
@@ -215,20 +238,8 @@ WIFI_Status_t WIFI_Disconnect(void)
   */
 WIFI_Status_t WIFI_ConfigureAP(uint8_t *ssid, uint8_t *pass, WIFI_Ecn_t ecn, uint8_t channel, uint8_t max_conn)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  ES_WIFI_APConfig_t ApConfig;
-  
-  strncpy((char*)ApConfig.SSID, (char*)ssid, ES_WIFI_MAX_SSID_NAME_SIZE);
-  strncpy((char*)ApConfig.Pass, (char*)pass, ES_WIFI_MAX_PSWD_NAME_SIZE);
-  ApConfig.Channel = channel;
-  ApConfig.MaxConnections = WIFI_MAX_CONNECTED_STATIONS;
-  ApConfig.Security = (ES_WIFI_SecurityType_t)ecn;
-  
-  if(ES_WIFI_ActivateAP(&EsWifiObj, &ApConfig) == ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    WIFI_Status_t ret = WIFI_STATUS_NOT_SUPPORTED;
+    return ret;
 }
 
 /**
@@ -238,34 +249,8 @@ WIFI_Status_t WIFI_ConfigureAP(uint8_t *ssid, uint8_t *pass, WIFI_Ecn_t ecn, uin
 */
 WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
 {
-  WIFI_Status_t ret = WIFI_STATUS_OK;
-  ES_WIFI_APState_t State;
-  
-  State= ES_WIFI_WaitAPStateChange(&EsWifiObj);
-  
-  switch (State)
-  {
-  case ES_WIFI_AP_ASSIGNED:
-    memcpy(setting->IP_Addr, EsWifiObj.APSettings.IP_Addr, 4);
-    memcpy(setting->MAC_Addr, EsWifiObj.APSettings.MAC_Addr, 6);
-    ret = WIFI_STATUS_ASSIGNED;
-    break;
-    
-  case ES_WIFI_AP_JOINED:
-    strncpy((char *)setting->SSID, (char *)EsWifiObj.APSettings.SSID, WIFI_MAX_SSID_NAME);
-    memcpy(setting->IP_Addr, EsWifiObj.APSettings.IP_Addr, 4);
-    ret = WIFI_STATUS_JOINED;
-    break;
-    
-  case ES_WIFI_AP_ERROR:
-    ret = WIFI_STATUS_ERROR;
-    break;
-    
-  default:
-    break;
-  }
-  
-  return ret;
+    WIFI_Status_t ret = WIFI_STATUS_NOT_SUPPORTED;
+    return ret;
 }
 
 /**
@@ -275,13 +260,7 @@ WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
   */
 WIFI_Status_t WIFI_Ping(uint8_t *ipaddr, uint16_t count, uint16_t interval_ms, int32_t result[])
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-
-  if(ES_WIFI_Ping(&EsWifiObj, ipaddr, count, interval_ms, result) == ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -292,15 +271,9 @@ WIFI_Status_t WIFI_Ping(uint8_t *ipaddr, uint16_t count, uint16_t interval_ms, i
   */
 WIFI_Status_t WIFI_GetHostAddress(const char *location, uint8_t *ipaddr)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if (ES_WIFI_DNS_LookUp(&EsWifiObj, location, ipaddr) == ES_WIFI_STATUS_OK)
-  {
-    return WIFI_STATUS_OK;
-  }
-  
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
+
 /**
   * @brief  Configure and start a client connection
   * @param  type : Connection type TCP/UDP
@@ -310,24 +283,38 @@ WIFI_Status_t WIFI_GetHostAddress(const char *location, uint8_t *ipaddr)
   * @param  local_port : Local port
   * @retval Operation status
   */
-WIFI_Status_t WIFI_OpenClientConnection(uint32_t socket, WIFI_Protocol_t type, const char *name, uint8_t *ipaddr, uint16_t port, uint16_t local_port)
+WIFI_Status_t WIFI_OpenClientConnection(uint32_t *socket, WIFI_Protocol_t type, const char *name, uint8_t *ipaddr, uint16_t port, uint16_t local_port)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  ES_WIFI_Conn_t conn;
-  
-  conn.Number = socket;
-  conn.RemotePort = port;
-  conn.LocalPort = local_port;
-  conn.Type = (type == WIFI_TCP_PROTOCOL)? ES_WIFI_TCP_CONNECTION : ES_WIFI_UDP_CONNECTION;
-  conn.RemoteIP[0] = ipaddr[0];
-  conn.RemoteIP[1] = ipaddr[1];
-  conn.RemoteIP[2] = ipaddr[2];
-  conn.RemoteIP[3] = ipaddr[3];
-  if(ES_WIFI_StartClientConnection(&EsWifiObj, &conn)== ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwesp_netconn_p client;
+    lwesp_netconn_type_t protocol;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    char ip_in_string[16];
+
+    *socket = 0;
+
+    if (type == WIFI_TCP_PROTOCOL) {
+        protocol = LWESP_NETCONN_TYPE_TCP;
+    } else { /* type == WIFI_TCP_PROTOCOL */
+        protocol = LWESP_NETCONN_TYPE_UDP;
+    }
+
+    client = lwesp_netconn_new(protocol);
+    if (client != NULL) {
+
+        sprintf(ip_in_string, "%d.%d.%d.%d", ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
+        
+        api_ret = lwesp_netconn_connect(client, ip_in_string, port);
+        if (api_ret == lwespOK) {
+            *socket = (uint32_t)client;
+            ret = WIFI_STATUS_OK;
+        } else {
+            (void)lwesp_netconn_delete(client);
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -336,15 +323,18 @@ WIFI_Status_t WIFI_OpenClientConnection(uint32_t socket, WIFI_Protocol_t type, c
   */
 WIFI_Status_t WIFI_CloseClientConnection(uint32_t socket)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  ES_WIFI_Conn_t conn;
-  conn.Number = socket;
-  
-  if(ES_WIFI_StopClientConnection(&EsWifiObj, &conn)== ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    api_ret = lwesp_netconn_close((lwesp_netconn_p)socket);
+    if (api_ret == lwespOK) {
+        api_ret = lwesp_netconn_delete((lwesp_netconn_p)socket);
+        if (api_ret == lwespOK) {
+            ret = WIFI_STATUS_OK;
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -354,19 +344,9 @@ WIFI_Status_t WIFI_CloseClientConnection(uint32_t socket)
   * @param  port : Remote port
   * @retval Operation status
   */
-WIFI_Status_t WIFI_StartServer(uint32_t socket, WIFI_Protocol_t protocol, uint16_t backlog ,const char *name, uint16_t port)
+WIFI_Status_t WIFI_StartServer(uint32_t *socket, WIFI_Protocol_t protocol, uint16_t backlog ,const char *name, uint16_t port)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  ES_WIFI_Conn_t conn;
-  conn.Number = socket;
-  conn.LocalPort = port;
-  conn.Type = (protocol == WIFI_TCP_PROTOCOL)? ES_WIFI_TCP_CONNECTION : ES_WIFI_UDP_CONNECTION;
-  conn.Backlog = backlog;
-  if(ES_WIFI_StartServerSingleConn(&EsWifiObj, &conn)== ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -374,50 +354,18 @@ WIFI_Status_t WIFI_StartServer(uint32_t socket, WIFI_Protocol_t protocol, uint16
   * @param  socket : socket
   * @retval Operation status
   */
-WIFI_Status_t WIFI_WaitServerConnection(int socket,uint32_t Timeout,uint8_t *RemoteIp,uint16_t *RemotePort)
+WIFI_Status_t WIFI_WaitServerConnection(uint32_t socket,uint32_t Timeout,uint8_t *RemoteIp,uint16_t *RemotePort)
 {
-  ES_WIFI_Conn_t conn;
-  ES_WIFI_Status_t ret;
-  
-  conn.Number = socket;
-
-  ret = ES_WIFI_WaitServerConnection(&EsWifiObj,Timeout,&conn);
-
-  if (ES_WIFI_STATUS_OK == ret)
-  {
-    if (RemotePort) *RemotePort=conn.RemotePort;
-    if (RemoteIp)
-    {
-      memcpy(RemoteIp,conn.RemoteIP,sizeof(conn.RemoteIP));
-    }
-    return  WIFI_STATUS_OK;
-  }
-  
-  if (ES_WIFI_STATUS_TIMEOUT ==ret)
-  {
-    if (RemotePort) *RemotePort=0;
-    if (RemoteIp)
-    {
-      memset(RemoteIp,0,sizeof(conn.RemoteIP));
-    }
-    return  WIFI_STATUS_TIMEOUT;
-  }
-
-  return WIFI_STATUS_ERROR;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
   * @brief  Close current connection from a client  to the server
   * @retval Operation status
   */
-WIFI_Status_t WIFI_CloseServerConnection(int socket)
+WIFI_Status_t WIFI_CloseServerConnection(uint32_t socket)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  if (ES_WIFI_STATUS_OK == ES_WIFI_CloseServerConnection(&EsWifiObj,socket))
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -427,13 +375,7 @@ WIFI_Status_t WIFI_CloseServerConnection(int socket)
   */
 WIFI_Status_t WIFI_StopServer(uint32_t socket)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(ES_WIFI_StopServerSingleConn(&EsWifiObj,socket)== ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -444,16 +386,35 @@ WIFI_Status_t WIFI_StopServer(uint32_t socket)
   * @param  Timeout : Socket write timeout (ms)
   * @retval Operation status
   */
-WIFI_Status_t WIFI_SendData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout)
+WIFI_Status_t WIFI_SendData(uint32_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
+struct _netconn_internal {
+    void *dummy;
+    lwesp_netconn_type_t type;
+};
 
-    if(ES_WIFI_SendData(&EsWifiObj, socket, pdata, Reqlen, SentDatalen, Timeout) == ES_WIFI_STATUS_OK)
-    {
-      ret = WIFI_STATUS_OK;
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+    *SentDatalen = 0;
+
+    if (((struct _netconn_internal *)socket)->type == LWESP_NETCONN_TYPE_TCP) {
+        api_ret = lwesp_netconn_write((lwesp_netconn_p)socket, pdata, (size_t)Reqlen);
+        if (api_ret == lwespOK) {
+            api_ret = lwesp_netconn_flush((lwesp_netconn_p)socket);
+            if (api_ret == lwespOK) {
+                *SentDatalen = Reqlen;
+                ret = WIFI_STATUS_OK;
+            }
+        }
+    } else if (((struct _netconn_internal *)socket)->type == LWESP_NETCONN_TYPE_UDP) {
+        api_ret = lwesp_netconn_send((lwesp_netconn_p)socket, pdata, (size_t)Reqlen);
+        if (api_ret == lwespOK) {
+            *SentDatalen = Reqlen;
+            ret = WIFI_STATUS_OK;
+        }
     }
 
-  return ret;
+    return ret;    
 }
 
 /**
@@ -468,14 +429,7 @@ WIFI_Status_t WIFI_SendData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uin
   */
 WIFI_Status_t WIFI_SendDataTo(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout, uint8_t *ipaddr, uint16_t port)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-
-  if(ES_WIFI_SendDataTo(&EsWifiObj, socket, pdata, Reqlen, SentDatalen, Timeout, ipaddr, port) == ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -486,15 +440,32 @@ WIFI_Status_t WIFI_SendDataTo(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, u
   * @param  Timeout : Socket read timeout (ms)
   * @retval Operation status
   */
-WIFI_Status_t WIFI_ReceiveData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *RcvDatalen, uint32_t Timeout)
+WIFI_Status_t WIFI_ReceiveData(uint32_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *RcvDatalen, uint32_t Timeout)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
+    lwesp_pbuf_p pbuf;
+    lwespr_t api_ret;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
 
-  if(ES_WIFI_ReceiveData(&EsWifiObj, socket, pdata, Reqlen, RcvDatalen, Timeout) == ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    (void)Timeout;
+    *RcvDatalen = 0;
+
+    lwesp_netconn_set_receive_timeout((lwesp_netconn_p)socket, LWESP_NETCONN_RECEIVE_NO_WAIT);
+
+    api_ret = lwesp_netconn_receive((lwesp_netconn_p)socket, &pbuf);
+    if (api_ret == lwespCLOSED) {
+        printf("Connection closed by remote side...\r\n");
+    } else if (api_ret == lwespTIMEOUT) {
+        ret = WIFI_STATUS_OK;
+    }
+
+    if (api_ret == lwespOK && pbuf != NULL) {
+        *RcvDatalen = lwesp_pbuf_length(pbuf, 1);
+        memcpy(pdata, lwesp_pbuf_data(pbuf), *RcvDatalen);
+        lwesp_pbuf_free(pbuf);    /* Free the memory after usage */
+        ret = WIFI_STATUS_OK;
+    }
+
+    return ret;      
 }
 
 /**
@@ -509,13 +480,7 @@ WIFI_Status_t WIFI_ReceiveData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, 
   */
 WIFI_Status_t WIFI_ReceiveDataFrom(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *RcvDatalen, uint32_t Timeout, uint8_t *ipaddr, uint16_t *port)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-
-  if(ES_WIFI_ReceiveDataFrom(&EsWifiObj, socket, pdata, Reqlen, RcvDatalen, Timeout, ipaddr, port) == ES_WIFI_STATUS_OK)
-  {
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -526,16 +491,7 @@ WIFI_Status_t WIFI_ReceiveDataFrom(uint8_t socket, uint8_t *pdata, uint16_t Reql
   */
 WIFI_Status_t WIFI_SetOEMProperties(const char *name, uint8_t *Mac)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(ES_WIFI_SetProductName(&EsWifiObj, (uint8_t *)name) == ES_WIFI_STATUS_OK)
-  {
-    if(ES_WIFI_SetMACAddress(&EsWifiObj, Mac) == ES_WIFI_STATUS_OK)
-    {
-      ret = WIFI_STATUS_OK;
-    }
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -544,13 +500,7 @@ WIFI_Status_t WIFI_SetOEMProperties(const char *name, uint8_t *Mac)
   */
 WIFI_Status_t WIFI_ResetModule(void)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(ES_WIFI_ResetModule(&EsWifiObj) == ES_WIFI_STATUS_OK)
-  {
-      ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -559,13 +509,7 @@ WIFI_Status_t WIFI_ResetModule(void)
   */
 WIFI_Status_t WIFI_SetModuleDefault(void)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(ES_WIFI_ResetToFactoryDefault(&EsWifiObj) == ES_WIFI_STATUS_OK)
-  {
-      ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 
@@ -576,7 +520,7 @@ WIFI_Status_t WIFI_SetModuleDefault(void)
   */
 WIFI_Status_t WIFI_ModuleFirmwareUpdate(const char *location)
 {
-  return WIFI_STATUS_NOT_SUPPORTED;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -586,14 +530,12 @@ WIFI_Status_t WIFI_ModuleFirmwareUpdate(const char *location)
   */
 WIFI_Status_t WIFI_GetModuleFwRevision(char *rev)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(EsWifiObj.FW_Rev != NULL)
-  {
-    strncpy(rev, (char *)EsWifiObj.FW_Rev, ES_WIFI_FW_REV_SIZE);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    lwesp_sw_version_t version;
+    lwesp_get_current_at_fw_version(&version);
+
+    sprintf(rev, "ESP-AT %d.%d.%d", version.major, version.minor, version.patch);
+    
+    return WIFI_STATUS_OK;
 }
 
 /**
@@ -603,14 +545,7 @@ WIFI_Status_t WIFI_GetModuleFwRevision(char *rev)
   */
 WIFI_Status_t WIFI_GetModuleID(char *Id)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(EsWifiObj.Product_ID != NULL)
-  {
-    strncpy(Id, (char *)EsWifiObj.Product_ID, ES_WIFI_PRODUCT_ID_SIZE);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -620,13 +555,15 @@ WIFI_Status_t WIFI_GetModuleID(char *Id)
   */
 WIFI_Status_t WIFI_GetModuleName(char *ModuleName)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
-  if(EsWifiObj.Product_Name != NULL)
-  {
-    strncpy(ModuleName, (char *)EsWifiObj.Product_Name, ES_WIFI_PRODUCT_NAME_SIZE);
-    ret = WIFI_STATUS_OK;
-  }
-  return ret;
+    if (lwesp_device_is_esp8266() == 1) {
+        strcpy(ModuleName, "ESP8266");
+    } else if (lwesp_device_is_esp32() == 1) {
+        strcpy(ModuleName, "ESP32");
+    } else if (lwesp_device_is_esp32_c3() == 1) {
+        strcpy(ModuleName, "ESP32-C3");
+    } else {
+        strcpy(ModuleName, "UNKNOWN");
+    }
+
+    return WIFI_STATUS_OK;
 }
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

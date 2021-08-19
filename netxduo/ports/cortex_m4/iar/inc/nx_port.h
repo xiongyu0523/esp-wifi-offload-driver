@@ -56,7 +56,7 @@
 #define NX_ENABLE_INTERFACE_CAPABILITY
 #define SAMPLE_DHCP_DISABLE
 #define SAMPLE_BOARD_SETUP board_setup
-#define SAMPLE_NETWORK_DRIVER nx_driver_stm32l4
+#define SAMPLE_NETWORK_DRIVER nx_driver_esp_offload
 #define SAMPLE_NETWORK_CONFIGURE sample_network_configure
 
 /* NetX */

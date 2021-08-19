@@ -21,8 +21,7 @@
 /**************************************************************************/
 
 /* Indicate that driver source is being compiled.  */
-
-#include "nx_driver_stm32l4.h"
+#include "nx_driver_esp_offload.h"
 
 #ifndef NX_ENABLE_TCPIP_OFFLOAD
 #error "NX_ENABLE_TCPIP_OFFLOAD must be defined to use this driver"
@@ -83,6 +82,7 @@ typedef struct NX_DRIVER_INFORMATION_STRUCT
 typedef struct NX_DRIVER_SOCKET_STRUCT
 {
     VOID                *socket_ptr;
+    VOID                *driver_socket;
     UINT                 protocol;
     ULONG                local_ip;
     ULONG                remote_ip;
@@ -182,7 +182,7 @@ static UINT         _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_
 /*  xx-xx-xxxx     Yuxin Zhou               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-VOID  nx_driver_stm32l4(NX_IP_DRIVER *driver_req_ptr)
+VOID  nx_driver_esp_offload(NX_IP_DRIVER *driver_req_ptr)
 {
     
     /* Default to successful return.  */
@@ -1081,7 +1081,7 @@ NX_PACKET_POOL *pool_ptr = nx_driver_information.nx_driver_information_packet_po
                 }
 
                 /* Receive data without suspending.  */
-                status = WIFI_ReceiveData(i, (uint8_t*)(packet_ptr -> nx_packet_prepend_ptr),
+                status = WIFI_ReceiveData((uint32_t)(nx_driver_sockets[i].driver_socket), (uint8_t*)(packet_ptr -> nx_packet_prepend_ptr),
                                           data_length, &data_length, NX_NO_WAIT);
 
                 if (status != WIFI_STATUS_OK)
@@ -1269,7 +1269,7 @@ UINT i;
         remote_ip_bytes[3] = (remote_ip -> nxd_ip_address.v4) & 0xFF;
 
         /* Connect.  */
-        status = WIFI_OpenClientConnection(i, WIFI_TCP_PROTOCOL, "",
+        status = WIFI_OpenClientConnection((uint32_t *)&(nx_driver_sockets[i].driver_socket), WIFI_TCP_PROTOCOL, "",
                                            remote_ip_bytes, *remote_port, local_port);
 
         if (status)
@@ -1297,7 +1297,7 @@ UINT i;
         ((NX_TCP_SOCKET *)socket_ptr) -> nx_tcp_socket_tcpip_offload_context = (VOID *)i;
 
         /* Start TCP server.  */
-        status = WIFI_StartServer(i, WIFI_TCP_PROTOCOL, NX_DRIVER_SERVER_LISTEN_COUNT, "", local_port);
+        status = WIFI_StartServer((uint32_t *)&(nx_driver_sockets[i].driver_socket), WIFI_TCP_PROTOCOL, NX_DRIVER_SERVER_LISTEN_COUNT, "", local_port);
         if (status)
         {
             return(NX_NOT_SUCCESSFUL);
@@ -1319,7 +1319,7 @@ UINT i;
         i = (UINT)(((NX_TCP_SOCKET *)socket_ptr) -> nx_tcp_socket_tcpip_offload_context);
 
         /* Accept connection.  */
-        status = WIFI_WaitServerConnection(i, 1, remote_ip_bytes, &nx_driver_sockets[i].remote_port);
+        status = WIFI_WaitServerConnection((uint32_t)(nx_driver_sockets[i].driver_socket), 1, remote_ip_bytes, &nx_driver_sockets[i].remote_port);
 
         if (status)
         {
@@ -1374,7 +1374,7 @@ UINT i;
 #endif
 
                 /* Disconnect.  */
-                status = WIFI_CloseClientConnection(i);
+                status = WIFI_CloseClientConnection((uint32_t)(nx_driver_sockets[i].driver_socket));
             }
             else
             {
@@ -1417,7 +1417,7 @@ UINT i;
         {
             
             /* Disconnect.  */
-            status = WIFI_CloseClientConnection(i);
+            status = WIFI_CloseClientConnection((uint32_t)(nx_driver_sockets[i].driver_socket));
 
 #ifdef NX_DEBUG
             printf("UDP socket %u unbind port: %u\r\n", i, local_port);
@@ -1441,7 +1441,7 @@ UINT i;
             remote_ip_bytes[3] = (remote_ip -> nxd_ip_address.v4) & 0xFF;
 
             /* Connect.  */
-            status = WIFI_OpenClientConnection((uint8_t)i, WIFI_UDP_PROTOCOL, "",
+            status = WIFI_OpenClientConnection((uint32_t *)&(nx_driver_sockets[i].driver_socket), WIFI_UDP_PROTOCOL, "",
                                                remote_ip_bytes, *remote_port,  local_port);
             if (status)
             {
@@ -1485,7 +1485,7 @@ UINT i;
         }
 
         /* Send data.  */
-        status = WIFI_SendData((uint8_t)i,
+        status = WIFI_SendData((uint32_t)(nx_driver_sockets[i].driver_socket),
                                 packet_ptr -> nx_packet_prepend_ptr,
                                 (uint16_t)(packet_ptr -> nx_packet_length), &sent_size,
                                 wait_option); 
@@ -1532,7 +1532,7 @@ UINT i;
             }
 
             /* Send data.  */
-            status = WIFI_SendData((uint8_t)i,
+            status = WIFI_SendData((uint32_t)(nx_driver_sockets[i].driver_socket),
                                    current_packet -> nx_packet_prepend_ptr + offset,
                                    (uint16_t)packet_size, &sent_size,
                                    wait_option); 
@@ -1739,7 +1739,7 @@ UINT i;
         {
 
             /* Disconnect.  */
-            WIFI_CloseClientConnection(i);
+            WIFI_CloseClientConnection((uint32_t)(nx_driver_sockets[i].driver_socket));
             nx_driver_sockets[i].socket_ptr = NX_NULL;
         }
     }

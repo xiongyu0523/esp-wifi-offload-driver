@@ -1,26 +1,8 @@
-/**
-  ******************************************************************************
-  * @file    wifi.h
-  * @author  MCD Application Team
-  * @brief   This file contains the different WiFi core resources definitions.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics International N.V. 
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
 #ifndef WIFI_H
 #define WIFI_H
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -140,17 +122,17 @@ WIFI_Status_t       WIFI_ConfigureAP(
 WIFI_Status_t       WIFI_HandleAPEvents(WIFI_APSettings_t *setting);
 WIFI_Status_t       WIFI_Ping(uint8_t *ipaddr, uint16_t count, uint16_t interval_ms,int32_t result[]);
 WIFI_Status_t       WIFI_GetHostAddress(const char *location, uint8_t *ipaddr);
-WIFI_Status_t       WIFI_OpenClientConnection(uint32_t socket, WIFI_Protocol_t type, const char *name, uint8_t *ipaddr, uint16_t port, uint16_t local_port);
+WIFI_Status_t       WIFI_OpenClientConnection(uint32_t *socket, WIFI_Protocol_t type, const char *name, uint8_t *ipaddr, uint16_t port, uint16_t local_port);
 WIFI_Status_t       WIFI_CloseClientConnection(uint32_t socket);
 
-WIFI_Status_t       WIFI_StartServer(uint32_t socket, WIFI_Protocol_t type, uint16_t backlog, const char *name, uint16_t port);
-WIFI_Status_t       WIFI_WaitServerConnection(int socket,uint32_t Timeout,uint8_t *remoteipaddr, uint16_t *remoteport);
-WIFI_Status_t       WIFI_CloseServerConnection(int socket);
+WIFI_Status_t       WIFI_StartServer(uint32_t *socket, WIFI_Protocol_t type, uint16_t backlog, const char *name, uint16_t port);
+WIFI_Status_t       WIFI_WaitServerConnection(uint32_t socket,uint32_t Timeout,uint8_t *remoteipaddr, uint16_t *remoteport);
+WIFI_Status_t       WIFI_CloseServerConnection(uint32_t socket);
 WIFI_Status_t       WIFI_StopServer(uint32_t socket);
 
-WIFI_Status_t       WIFI_SendData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout);
+WIFI_Status_t       WIFI_SendData(uint32_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout);
 WIFI_Status_t       WIFI_SendDataTo(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout, uint8_t *ipaddr, uint16_t port);
-WIFI_Status_t       WIFI_ReceiveData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *RcvDatalen, uint32_t Timeout);
+WIFI_Status_t       WIFI_ReceiveData(uint32_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *RcvDatalen, uint32_t Timeout);
 WIFI_Status_t       WIFI_ReceiveDataFrom(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *RcvDatalen, uint32_t Timeout, uint8_t *ipaddr, uint16_t *port);
 WIFI_Status_t       WIFI_StartClient(void);
 WIFI_Status_t       WIFI_StopClient(void);

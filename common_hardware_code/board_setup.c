@@ -6,17 +6,6 @@
 #include "stm32l4s5i_iot01.h"
 #include "wifi.h"
 
-/* Define the default wifi ssid and password. The user can override this 
-   via -D command line option or via project settings.  */
-
-#ifndef WIFI_SSID
-#error "Symbol WIFI_SSID must be defined."
-#endif /* WIFI_SSID  */
-
-#ifndef WIFI_PASSWORD
-#error "Symbol WIFI_PASSWORD must be defined."
-#endif /* WIFI_PASSWORD  */
-
 /* WIFI Security type, the security types are defined in wifi.h.
   WIFI_ECN_OPEN = 0x00,         
   WIFI_ECN_WEP = 0x01,          
@@ -430,7 +419,7 @@ uint32_t  retry_connect=0;
   /* Configure push button.  */
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
   
-  return WIFI_OK;
+  return 0;
 }
 
 #ifdef USE_COM_PORT
