@@ -1,5 +1,5 @@
 /**
- * \file            lwesp_sys_threadx_os.c
+ * \file            lwesp_sys_threadx.c
  * \brief           System dependant functions
  */
 
