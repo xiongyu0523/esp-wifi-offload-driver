@@ -1,6 +1,6 @@
 /**
- * \file            lwesp_ll_stm32.c
- * \brief           Generic STM32 driver, included in various STM32 driver variants
+ * \file            lwesp_ll_stm32_threadx.c
+ * \brief           Generic STM32 driver for ThreadX, included in various STM32 driver variants
  */
 
 /*
@@ -29,6 +29,7 @@
  * This file is part of LwESP - Lightweight ESP-AT parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
+ * Author:          Neo Xiong <xiongyu0523@gmail.com>
  * Version:         v1.1.0-dev
  */
 

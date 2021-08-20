@@ -1,6 +1,6 @@
 /**
  * \file            lwesp_sys_port.h
- * \brief           FreeRTOS native port
+ * \brief           ThreadX native port
  */
 
 /*
@@ -29,7 +29,7 @@
  * This file is part of LwESP - Lightweight ESP-AT parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Author:          Adrian Carpenter (FreeRTOS port)
+ * Author:          Neo Xiong <xiongyu0523@gmail.com>
  * Version:         v1.1.0-dev
  */
 #ifndef LWESP_HDR_SYSTEM_PORT_H
