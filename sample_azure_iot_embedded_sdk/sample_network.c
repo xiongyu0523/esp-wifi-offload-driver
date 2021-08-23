@@ -12,6 +12,13 @@ typedef union {
 #define RETRY_TIMES 3
 #endif
 
+#define TEST_AP_MODE                    1
+
+#if (TEST_AP_MODE == 1)
+#define WIFI_CHANNEL 13
+#endif
+
+
 void sample_network_configure(const CHAR *ssid_ptr, const CHAR *pwd_ptr, NX_IP *ip_ptr, ULONG *dns_address)
 {
     uint32_t retry_connect = 0;
@@ -40,6 +47,15 @@ void sample_network_configure(const CHAR *ssid_ptr, const CHAR *pwd_ptr, NX_IP *
             printf("!!!ERROR: WIFI Get MAC Address Failed.\r\n");
             return;
         }
+
+#if (TEST_AP_MODE == 1)
+        if (WIFI_ConfigureAP("mytestap", "12345678", WIFI_ECN_WPA2_PSK, WIFI_CHANNEL, 1) == WIFI_STATUS_OK) {
+            printf("WIFI AP is Up.\r\n");
+        } else {
+            printf("!!!ERROR: WIFI AP Configuration Failed.\r\n");
+            return;
+        }
+#endif
    
         while ((retry_connect++) < RETRY_TIMES) {
 

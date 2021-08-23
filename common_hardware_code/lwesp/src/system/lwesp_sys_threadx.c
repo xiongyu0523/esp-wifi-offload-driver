@@ -220,9 +220,18 @@ typedef VOID (*threadx_entry_t)(ULONG);
 
 uint8_t
 lwesp_sys_thread_terminate(lwesp_sys_thread_t* t) {
+  
+    if (t == NULL) {
+        t = tx_thread_identify();
+    }
 
-    (VOID)tx_thread_delete(t);
-    lwesp_mem_free(t->tx_thread_stack_start);
+    (VOID)tx_thread_terminate(t);
+    
+    if (t != tx_thread_identify()) {
+        tx_thread_delete(t);
+        lwesp_mem_free(t->tx_thread_stack_start);
+    }
+
     return 1;
 }
 

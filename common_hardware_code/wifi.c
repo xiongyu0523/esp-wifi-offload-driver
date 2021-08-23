@@ -35,6 +35,26 @@ static lwespr_t lwesp_callback_func(lwesp_evt_t* evt) {
             printf("IP acquired\r\n");
             break;
         }
+        case LWESP_EVT_AP_CONNECTED_STA: {
+            lwesp_mac_t* mac = lwesp_evt_ap_connected_sta_get_mac(evt);
+            printf("Station %02X:%02X:%02X:%02X:%02X:%02X connected\r\n", mac->mac[0], mac->mac[1], mac->mac[2], mac->mac[3], mac->mac[4], mac->mac[5]);
+            break;
+        }
+        case LWESP_EVT_AP_IP_STA: {
+            lwesp_mac_t* mac = lwesp_evt_ap_ip_sta_get_mac(evt);
+            lwesp_ip_t* ip = lwesp_evt_ap_ip_sta_get_ip(evt);
+
+            printf("Assigned %d.%d.%d.%d to %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                   ip->addr.ip4.addr[0], ip->addr.ip4.addr[1], ip->addr.ip4.addr[2], ip->addr.ip4.addr[3],
+                   mac->mac[0], mac->mac[1], mac->mac[2], mac->mac[3], mac->mac[4], mac->mac[5]);
+            break;
+        }
+        case LWESP_EVT_AP_DISCONNECTED_STA: {
+            lwesp_mac_t* mac = lwesp_evt_ap_disconnected_sta_get_mac(evt);
+            printf("Station %02X:%02X:%02X:%02X:%02X:%02X disconnected\r\n", mac->mac[0], mac->mac[1], mac->mac[2], mac->mac[3], mac->mac[4], mac->mac[5]);
+            break;
+        }
+
         default: break;
     }
     return lwespOK;
@@ -49,15 +69,17 @@ static lwespr_t lwesp_callback_func(lwesp_evt_t* evt) {
   */
 WIFI_Status_t WIFI_Init(void)
 {
-    lwespr_t api_ret;
-    WIFI_Status_t ret;
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
 
     api_ret = lwesp_init(lwesp_callback_func, 1);
     if (api_ret == lwespOK) {
-        ret = WIFI_STATUS_OK;
-    } else {
-        ret = WIFI_STATUS_ERROR;
+        api_ret = lwesp_set_wifi_mode(LWESP_MODE_STA_AP, NULL, NULL, 1);
+        if (api_ret == lwespOK) {
+          ret = WIFI_STATUS_OK;
+        }
     }
+    
     return ret;
 }
 
@@ -215,7 +237,7 @@ WIFI_Status_t WIFI_GetDNS_Address (uint8_t  *DNS1addr,uint8_t  *DNS2addr)
   */
 WIFI_Status_t WIFI_Disconnect(void)
 {
-    lwespr_t api_ret;
+    lwespr_t api_ret = lwespERR;
     WIFI_Status_t ret = WIFI_STATUS_ERROR;
 
     api_ret = lwesp_sta_quit(NULL, NULL, 1); 
@@ -238,7 +260,14 @@ WIFI_Status_t WIFI_Disconnect(void)
   */
 WIFI_Status_t WIFI_ConfigureAP(uint8_t *ssid, uint8_t *pass, WIFI_Ecn_t ecn, uint8_t channel, uint8_t max_conn)
 {
-    WIFI_Status_t ret = WIFI_STATUS_NOT_SUPPORTED;
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    api_ret = lwesp_ap_set_config((const char *)ssid, (const char *)pass, channel, (lwesp_ecn_t)ecn, max_conn, 0, NULL, NULL, 1);
+    if (api_ret == lwespOK) {
+        ret = WIFI_STATUS_OK;
+    }
+    
     return ret;
 }
 
@@ -249,8 +278,7 @@ WIFI_Status_t WIFI_ConfigureAP(uint8_t *ssid, uint8_t *pass, WIFI_Ecn_t ecn, uin
 */
 WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
 {
-    WIFI_Status_t ret = WIFI_STATUS_NOT_SUPPORTED;
-    return ret;
+    return WIFI_STATUS_NOT_SUPPORTED;
 }
 
 /**
@@ -260,6 +288,7 @@ WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
   */
 WIFI_Status_t WIFI_Ping(uint8_t *ipaddr, uint16_t count, uint16_t interval_ms, int32_t result[])
 {
+    /* ICMP implemented by NetX Duo */
     return WIFI_STATUS_NOT_SUPPORTED;
 }
 
@@ -271,6 +300,7 @@ WIFI_Status_t WIFI_Ping(uint8_t *ipaddr, uint16_t count, uint16_t interval_ms, i
   */
 WIFI_Status_t WIFI_GetHostAddress(const char *location, uint8_t *ipaddr)
 {
+    /* DNS implemented by NetX Duo */    
     return WIFI_STATUS_NOT_SUPPORTED;
 }
 
@@ -388,16 +418,11 @@ WIFI_Status_t WIFI_StopServer(uint32_t socket)
   */
 WIFI_Status_t WIFI_SendData(uint32_t socket, uint8_t *pdata, uint16_t Reqlen, uint16_t *SentDatalen, uint32_t Timeout)
 {
-struct _netconn_internal {
-    void *dummy;
-    lwesp_netconn_type_t type;
-};
-
     lwespr_t api_ret = lwespERR;
     WIFI_Status_t ret = WIFI_STATUS_ERROR;
     *SentDatalen = 0;
 
-    if (((struct _netconn_internal *)socket)->type == LWESP_NETCONN_TYPE_TCP) {
+    if (lwesp_netconn_get_type((lwesp_netconn_p)socket) == LWESP_NETCONN_TYPE_TCP) {
         api_ret = lwesp_netconn_write((lwesp_netconn_p)socket, pdata, (size_t)Reqlen);
         if (api_ret == lwespOK) {
             api_ret = lwesp_netconn_flush((lwesp_netconn_p)socket);
@@ -406,7 +431,7 @@ struct _netconn_internal {
                 ret = WIFI_STATUS_OK;
             }
         }
-    } else if (((struct _netconn_internal *)socket)->type == LWESP_NETCONN_TYPE_UDP) {
+    } else if (lwesp_netconn_get_type((lwesp_netconn_p)socket) == LWESP_NETCONN_TYPE_UDP) {
         api_ret = lwesp_netconn_send((lwesp_netconn_p)socket, pdata, (size_t)Reqlen);
         if (api_ret == lwespOK) {
             *SentDatalen = Reqlen;
@@ -500,7 +525,15 @@ WIFI_Status_t WIFI_SetOEMProperties(const char *name, uint8_t *Mac)
   */
 WIFI_Status_t WIFI_ResetModule(void)
 {
-    return WIFI_STATUS_NOT_SUPPORTED;
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    api_ret = lwesp_reset(NULL, NULL, 1); 
+    if (api_ret == lwespOK) {
+        ret = WIFI_STATUS_OK;
+    }
+
+    return ret;
 }
 
 /**
@@ -509,7 +542,15 @@ WIFI_Status_t WIFI_ResetModule(void)
   */
 WIFI_Status_t WIFI_SetModuleDefault(void)
 {
-    return WIFI_STATUS_NOT_SUPPORTED;
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    api_ret = lwesp_restore(NULL, NULL, 1); 
+    if (api_ret == lwespOK) {
+        ret = WIFI_STATUS_OK;
+    }
+
+    return ret;
 }
 
 
