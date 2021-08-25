@@ -2267,7 +2267,7 @@
                     <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_mem_threadx.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_sys_threadx_os.c</name>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\system\lwesp_sys_threadx.c</name>
                 </file>
             </group>
         </group>
