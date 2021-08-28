@@ -3,12 +3,15 @@
 #include "lwesp/lwesp_sta.h"
 #include "lwesp/lwesp_dns.h"
 #include "lwesp/lwesp_netconn.h"
+#include "lwesp/lwesp_webserver.h"
 #include "wifi.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
 /* Private functions ---------------------------------------------------------*/
+
+TX_SEMAPHORE provision_semphr;
 
 static lwespr_t lwesp_callback_func(lwesp_evt_t* evt) {
     switch (lwesp_evt_get_type(evt)) {
@@ -54,6 +57,15 @@ static lwespr_t lwesp_callback_func(lwesp_evt_t* evt) {
             printf("Station %02X:%02X:%02X:%02X:%02X:%02X disconnected\r\n", mac->mac[0], mac->mac[1], mac->mac[2], mac->mac[3], mac->mac[4], mac->mac[5]);
             break;
         }
+        case LWESP_EVT_WEBSERVER: {
+            uint8_t status = lwesp_evt_webserver_get_status(evt);
+            printf("Web Server status response: %d\r\n", status);
+            
+            if (status == 2) {
+                (VOID)tx_semaphore_put(&provision_semphr);   
+            } 
+            break;
+        }
 
         default: break;
     }
@@ -74,10 +86,7 @@ WIFI_Status_t WIFI_Init(void)
 
     api_ret = lwesp_init(lwesp_callback_func, 1);
     if (api_ret == lwespOK) {
-        api_ret = lwesp_set_wifi_mode(LWESP_MODE_STA_AP, NULL, NULL, 1);
-        if (api_ret == lwespOK) {
-          ret = WIFI_STATUS_OK;
-        }
+        ret = WIFI_STATUS_OK;
     }
     
     return ret;
@@ -249,6 +258,16 @@ WIFI_Status_t WIFI_Disconnect(void)
 }
 
 /**
+  * @brief  Check if it is connected
+  * @param  None
+  * @retval Connection staus
+  */
+uint8_t WIFI_IsConnected(void)
+{
+    return lwesp_sta_is_joined();
+}
+
+/**
   * @brief  Configure an Access Point
 
   * @param  ssid : SSID string
@@ -263,13 +282,62 @@ WIFI_Status_t WIFI_ConfigureAP(uint8_t *ssid, uint8_t *pass, WIFI_Ecn_t ecn, uin
     lwespr_t api_ret = lwespERR;
     WIFI_Status_t ret = WIFI_STATUS_ERROR;
 
-    api_ret = lwesp_ap_set_config((const char *)ssid, (const char *)pass, channel, (lwesp_ecn_t)ecn, max_conn, 0, NULL, NULL, 1);
+    api_ret = lwesp_set_wifi_mode(LWESP_MODE_STA_AP, NULL, NULL, 1);
+    if (api_ret == lwespOK) {
+        api_ret = lwesp_ap_set_config((const char *)ssid, (const char *)pass, channel, (lwesp_ecn_t)ecn, max_conn, 0, NULL, NULL, 1);
+        if (api_ret == lwespOK) {
+            ret = WIFI_STATUS_OK;
+        }
+    }
+    
+    return ret;
+}
+
+/**
+  * @brief  Stop an Access Point
+
+  * @retval Operation status
+  */
+WIFI_Status_t WIFI_StopAP(void)
+{
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+
+    api_ret = lwesp_set_wifi_mode(LWESP_MODE_STA, NULL, NULL, 1);
     if (api_ret == lwespOK) {
         ret = WIFI_STATUS_OK;
     }
     
     return ret;
 }
+
+/**
+  * @brief  WiFi Wait for Provision
+
+  * @retval Operation status
+*/
+WIFI_Status_t WIFI_WaitForProvision(void)
+{
+    lwespr_t api_ret = lwespERR;
+    WIFI_Status_t ret = WIFI_STATUS_ERROR;
+    UINT status;
+
+    (VOID)tx_semaphore_create(&provision_semphr, NULL, 0);
+
+    api_ret = lwesp_set_webserver(1, 80, 60, NULL, NULL, 1);
+    if (api_ret == lwespOK) {
+        status = tx_semaphore_get(&provision_semphr, TX_WAIT_FOREVER);
+        if (status == TX_SUCCESS) {
+            ret = WIFI_STATUS_OK;
+        }
+    }
+
+    (void)lwesp_set_webserver(0, 0, 0, NULL, NULL, 1);
+    (VOID)tx_semaphore_delete(&provision_semphr);
+    
+    return ret;
+}
+
 
 /**
   * @brief  Handle the background events of the wifi module

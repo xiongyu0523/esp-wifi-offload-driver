@@ -168,7 +168,7 @@ void SAMPLE_BOARD_SETUP();
 #endif /* SAMPLE_BOARD_SETUP */
 
 #ifdef SAMPLE_NETWORK_CONFIGURE
-void SAMPLE_NETWORK_CONFIGURE(const CHAR *ssid_ptr, const CHAR *pwd_ptr, NX_IP *ip_ptr, ULONG *dns_address);
+int SAMPLE_NETWORK_CONFIGURE(const CHAR *ssid_ptr, const CHAR *pwd_ptr, NX_IP *ip_ptr, ULONG *dns_address);
 #endif
 
 /* Define main entry point.  */
@@ -298,7 +298,9 @@ UINT    dns_server_address_size = sizeof(dns_server_address);
 #ifndef SAMPLE_DHCP_DISABLE
     dhcp_wait();
 #elif defined(SAMPLE_NETWORK_CONFIGURE)
-    SAMPLE_NETWORK_CONFIGURE(WIFI_SSID, WIFI_PASSWORD, &ip_0, &dns_server_address[0]);
+    while (SAMPLE_NETWORK_CONFIGURE(WIFI_SSID, WIFI_PASSWORD, &ip_0, &dns_server_address[0]) < 0) {
+        tx_thread_sleep(TX_TIMER_TICKS_PER_SECOND);
+    }
 #else
     nx_ip_gateway_address_set(&ip_0, SAMPLE_GATEWAY_ADDRESS);
 #endif /* SAMPLE_DHCP_DISABLE  */

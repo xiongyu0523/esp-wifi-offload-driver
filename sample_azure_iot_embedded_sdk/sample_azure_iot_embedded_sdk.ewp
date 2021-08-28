@@ -2255,6 +2255,9 @@
                     <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_utils.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_webserver.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\common_hardware_code\lwesp\src\lwesp\lwesp_wps.c</name>
                 </file>
             </group>
@@ -2303,15 +2306,6 @@
         <name>Sample</name>
         <file>
             <name>$PROJ_DIR$\main.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\main_test_lwesp.c</name>
-            <excluded>
-                <configuration>Debug</configuration>
-            </excluded>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\netconn_client.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\nx_azure_iot_cert.c</name>

@@ -112,13 +112,15 @@ WIFI_Status_t       WIFI_GetGateway_Address (uint8_t  *Gateway_addr);
 WIFI_Status_t       WIFI_GetMAC_Address(uint8_t  *mac);
 
 WIFI_Status_t       WIFI_Disconnect(void);
+uint8_t             WIFI_IsConnected(void);
 WIFI_Status_t       WIFI_ConfigureAP(
                                         uint8_t *ssid,
                                         uint8_t *pass,
                                         WIFI_Ecn_t ecn,
                                         uint8_t channel,
                                         uint8_t max_conn);
-
+WIFI_Status_t       WIFI_StopAP(void);
+WIFI_Status_t       WIFI_WaitForProvision(void);
 WIFI_Status_t       WIFI_HandleAPEvents(WIFI_APSettings_t *setting);
 WIFI_Status_t       WIFI_Ping(uint8_t *ipaddr, uint16_t count, uint16_t interval_ms,int32_t result[]);
 WIFI_Status_t       WIFI_GetHostAddress(const char *location, uint8_t *ipaddr);

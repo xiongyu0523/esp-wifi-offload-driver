@@ -42,10 +42,13 @@
  */
 
 #define LWESP_CFG_ESP32_C3          1
+#define LWESP_CFG_RESTORE_ON_INIT   0
 #define LWESP_CFG_INPUT_USE_PROCESS 1
 #define LWESP_CFG_MEM_CUSTOM        1
 #define LWESP_MEM_SIZE              8192
 #define LWESP_CFG_NETCONN           1
 #define LWESP_CFG_DNS               1
+#define LWESP_CFG_WEBSERVER         1
+#define LWESP_CFG_AT_ECHO           0
 
 #endif /* LWESP_HDR_OPTS_H */
