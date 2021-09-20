@@ -8,11 +8,11 @@ The demo is verified on [B-L4S5I-IOT01A](https://www.st.com/en/evaluation-tools/
 
 | Signal name | B-L4S5I-IOT01A | ESP32-C3-DevKitM-1 |
 | ---- |  ----  | ---- |
-| 3V3  | CN2-4 | J1-21  |
+| 3V3  | CN2-4 | J1-2  |
 | GND | CN2-6   | J1-1   | 
 | TX  | CN3-2 (UART4-TX) | J3-9 (UART1-RX) | 
 | RX  | CN3-1 (UART4-RX) | J3-8 (URAT1-TX) | 
-| RESET | CN3-3 (GPIOD14) | CN1-7 (EN)
+| RESET | CN3-3 (GPIOD14) | J1-7 (EN)
 
 ## Prequisite 
 
